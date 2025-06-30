@@ -1,19 +1,8 @@
 package domain
 
 import (
-	"encoding/json"
 	"time"
 )
-
-func UnmarshalOrder(data []byte) (Order, error) {
-	var r Order
-	err := json.Unmarshal(data, &r)
-	return r, err
-}
-
-func (r *Order) Marshal() ([]byte, error) {
-	return json.Marshal(r)
-}
 
 type Order struct {
 	OrderUid          string    `json:"order_uid"          validate:"required"`

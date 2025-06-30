@@ -23,7 +23,7 @@ func init() {
 	}
 }
 
-func ValidateOrder(order *Order) error {
+func (order *Order) ValidateOrder() error {
 	return validate.Struct(order)
 }
 
