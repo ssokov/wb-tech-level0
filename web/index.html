@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>search orders</title>
+</head>
+<body>
+<h1>search orders by ID</h1>
+<input type="text" id="orderId" placeholder="input order ID" />
+<button onclick="fetchOrder()">search</button>
+<pre id="result"></pre>
+
+<script>
+    async function fetchOrder() {
+        const id = document.getElementById('orderId').value;
+        const res = await fetch('/order?id=' + encodeURIComponent(id));
+        const resultEl = document.getElementById('result');
+        if (res.ok) {
+            const data = await res.json();
+            resultEl.textContent = JSON.stringify(data, null, 2);
+        } else {
+            resultEl.textContent = 'order not found or error occured';
+        }
+    }
+</script>
+</body>
+</html>
