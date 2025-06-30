@@ -1,9 +1,11 @@
 package db
 
-import "database/sql"
+import (
+	"github.com/jmoiron/sqlx"
+)
 
-func ConnectToDb(dataSourceName string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", dataSourceName)
+func ConnectToDb(dataSourceName string) (*sqlx.DB, error) {
+	db, err := sqlx.Open("postgres", dataSourceName)
 	if err != nil {
 		return nil, err
 	}
