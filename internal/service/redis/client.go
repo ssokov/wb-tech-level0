@@ -28,6 +28,8 @@ func NewRedisClient(address string, duration time.Duration, repo repo.OrderRepo)
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		log.Fatalf("couldn't connect to Redis: %v", err)
 	}
+	log.Println("Connected to Redis")
+
 	return &Client{
 		client:        rdb,
 		cacheDuration: duration,
@@ -42,6 +44,7 @@ func (r *Client) SaveOrder(ctx context.Context, order *domain.Order) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("Saving order %s to cache", key)
 	return r.client.Set(ctx, key, data, r.cacheDuration).Err()
 }
 
@@ -64,13 +67,16 @@ func (r *Client) GetOrder(ctx context.Context, orderUid string) (*domain.Order, 
 func (r *Client) RestoreCache(ctx context.Context) error {
 	orders, err := r.orderRepo.GetAll(ctx)
 	if err != nil {
+		log.Printf("error getting orders to restore to cache: %s", err)
 		return err
 	}
 
 	for _, order := range orders {
 		if err := r.SaveOrder(ctx, &order); err != nil {
+			log.Printf("failed to save order %d to cache", order.OrderUid)
 			return err
 		}
 	}
+	log.Print("Redis cache restored")
 	return nil
 }

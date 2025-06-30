@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/kimvlry/simple-order-service/internal/service"
 	"net/http"
 )
@@ -33,4 +34,8 @@ func (h *OrderHandler) GetOrder(writer http.ResponseWriter, req *http.Request) {
 
 	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(order)
+}
+
+func (h *OrderHandler) Ping(writer http.ResponseWriter, req *http.Request) {
+	fmt.Fprintln(writer, "hello from simple order-service")
 }

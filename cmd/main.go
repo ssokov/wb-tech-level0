@@ -27,7 +27,7 @@ func main() {
 	}
 
 	pgRepo = repo.NewPgOrderRepo(pgDb)
-	redisClient = redis.NewRedisClient("localhost:6379", 5*time.Minute, pgRepo)
+	redisClient = redis.NewRedisClient("redis:6379", 5*time.Minute, pgRepo)
 	orderService = service.NewOrderService(pgRepo, redisClient)
 
 	if err := redisClient.RestoreCache(context.Background()); err != nil {
@@ -53,7 +53,7 @@ func StartWebServer() {
 }
 
 func StartKafka() {
-	brokers := []string{"localhost:9092"}
+	brokers := []string{"kafka:9092"}
 	groupID := "order-service-group"
 	topic := "orders"
 
