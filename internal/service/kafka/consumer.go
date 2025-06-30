@@ -12,11 +12,11 @@ import (
 
 type Consumer struct {
 	repo        repo.OrderRepo
-	redisClient *redis.RedisClient
+	redisClient *redis.Client
 	reader      *kafka.Reader
 }
 
-func NewConsumer(repo repo.OrderRepo, redisClient *redis.RedisClient, brokers []string, groupID, topic string) *Consumer {
+func NewConsumer(repo repo.OrderRepo, redisClient *redis.Client, brokers []string, groupID, topic string) *Consumer {
 	return &Consumer{
 		repo:        repo,
 		redisClient: redisClient,

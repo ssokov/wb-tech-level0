@@ -9,20 +9,18 @@ import (
 
 type OrderService struct {
 	repo        repo.OrderRepo
-	redisClient *redis.RedisClient
-	ctx         context.Context
+	redisClient *redis.Client
 }
 
-func NewOrderService(repo repo.OrderRepo, client *redis.RedisClient) *OrderService {
+func NewOrderService(repo repo.OrderRepo, client *redis.Client) *OrderService {
 	return &OrderService{
 		repo:        repo,
-		ctx:         context.Background(),
 		redisClient: client,
 	}
 }
 
-func (s *OrderService) GetOrderByID(id string) (*domain.Order, error) {
-	order, err := s.redisClient.GetOrder(s.ctx, id)
+func (s *OrderService) GetOrderByID(id string, ctx context.Context) (*domain.Order, error) {
+	order, err := s.redisClient.GetOrder(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -30,11 +28,11 @@ func (s *OrderService) GetOrderByID(id string) (*domain.Order, error) {
 		return order, nil
 	}
 
-	if order, err = s.repo.GetById(s.ctx, id); err != nil {
+	if order, err = s.repo.GetById(ctx, id); err != nil {
 		return nil, err
 	}
 	if order == nil {
-		_ = s.redisClient.SaveOrder(s.ctx, order)
+		_ = s.redisClient.SaveOrder(ctx, order)
 	}
 	return order, nil
 }
