@@ -37,6 +37,7 @@ func (c *Consumer) Consume() {
 			log.Printf("Error reading message from Kafka: %v", err)
 			continue
 		}
+		log.Printf("Read message at topic/partition/offset %v/%v/%v: %v", m.Topic, m.Partition, m.Offset, string(m.Value))
 
 		var order domain.Order
 		if err := json.Unmarshal(m.Value, &order); err != nil {
@@ -53,10 +54,12 @@ func (c *Consumer) Consume() {
 			log.Printf("Error saving order to DB: %v", err)
 			continue
 		}
+		log.Printf("Order from message %s saved to DB with ID %v", string(m.Key), order.OrderUid)
 
 		if err := c.redisClient.SaveOrder(ctx, &order); err != nil {
 			log.Printf("Error caching order to Redis: %v", err)
 			continue
 		}
+		log.Printf("Order %v from message %s cached to Redis", order.OrderUid, string(m.Key))
 	}
 }

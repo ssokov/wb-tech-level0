@@ -71,7 +71,7 @@ func (r *PgOrderRepo) Save(ctx context.Context, order *domain.Order) (err error)
 		}
 	}()
 
-	if err = r.insertOrder(ctx, tx, order); err != nil {
+	if err = r.insertOrder(tx, order); err != nil {
 		return err
 	}
 	if err = r.insertDelivery(ctx, tx, &order.Delivery, order.OrderUid); err != nil {
@@ -83,12 +83,11 @@ func (r *PgOrderRepo) Save(ctx context.Context, order *domain.Order) (err error)
 	if err = r.replaceItems(ctx, tx, order.Items, order.OrderUid); err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (r *PgOrderRepo) insertOrder(ctx context.Context, tx *sqlx.Tx, order *domain.Order) error {
-	_, err := tx.NamedExecContext(ctx, `
+func (r *PgOrderRepo) insertOrder(tx *sqlx.Tx, order *domain.Order) error {
+	query := `
         INSERT INTO orders (
             order_uid, track_number, entry, locale, internal_signature,
             customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard
@@ -96,9 +95,19 @@ func (r *PgOrderRepo) insertOrder(ctx context.Context, tx *sqlx.Tx, order *domai
             :order_uid, :track_number, :entry, :locale, :internal_signature,
             :customer_id, :delivery_service, :shardkey, :sm_id, :date_created, :oof_shard
         )
-        ON CONFLICT (order_uid) DO NOTHING;
-    `, order)
-	return err
+        ON CONFLICT (order_uid) DO NOTHING
+        RETURNING order_uid;
+    `
+	rows, err := tx.NamedQuery(query, order)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		return rows.Scan(&order.OrderUid)
+	}
+	return nil
 }
 
 func (r *PgOrderRepo) insertDelivery(ctx context.Context, tx *sqlx.Tx, d *domain.Delivery, orderUid string) error {
