@@ -21,10 +21,13 @@ func NewConsumer(repo repo.OrderRepo, redisClient *redis.Client, brokers []strin
 		repo:        repo,
 		redisClient: redisClient,
 		reader: kafka.NewReader(kafka.ReaderConfig{
-			Brokers: brokers,
-			GroupID: groupID,
-			Topic:   topic,
-		})}
+			Brokers:        brokers,
+			GroupID:        groupID,
+			Topic:          topic,
+			StartOffset:    kafka.FirstOffset,
+			CommitInterval: 0,
+		}),
+	}
 }
 
 func (c *Consumer) Consume() {
@@ -32,21 +35,28 @@ func (c *Consumer) Consume() {
 	ctx := context.Background()
 
 	for {
-		m, err := c.reader.ReadMessage(ctx)
+		m, err := c.reader.FetchMessage(ctx)
 		if err != nil {
-			log.Printf("Error reading message from Kafka: %v", err)
+			log.Printf("Error fetching message from Kafka: %v", err)
 			continue
 		}
+
 		log.Printf("Read message at topic/partition/offset %v/%v/%v: %v", m.Topic, m.Partition, m.Offset, string(m.Value))
 
 		var order domain.Order
 		if err := json.Unmarshal(m.Value, &order); err != nil {
 			log.Printf("Error unmarshalling message from Kafka: %v", err)
+			if err := c.reader.CommitMessages(ctx, m); err != nil {
+				log.Printf("Failed to commit offset after unmarshalling error: %v", err)
+			}
 			continue
 		}
 
 		if err := order.ValidateOrder(); err != nil {
 			log.Printf("Error validating order from Kafka: %v", err)
+			if err := c.reader.CommitMessages(ctx, m); err != nil {
+				log.Printf("Failed to commit offset after validation error: %v", err)
+			}
 			continue
 		}
 
@@ -54,12 +64,16 @@ func (c *Consumer) Consume() {
 			log.Printf("Error saving order to DB: %v", err)
 			continue
 		}
-		log.Printf("Order from message %s saved to DB with ID %v", string(m.Key), order.OrderUid)
 
 		if err := c.redisClient.SaveOrder(ctx, &order); err != nil {
 			log.Printf("Error caching order to Redis: %v", err)
 			continue
 		}
-		log.Printf("Order %v from message %s cached to Redis", order.OrderUid, string(m.Key))
+
+		if err := c.reader.CommitMessages(ctx, m); err != nil {
+			log.Printf("Failed to commit offset: %v", err)
+		} else {
+			log.Printf("Order from message %s saved and cached, offset committed", string(m.Key))
+		}
 	}
 }
