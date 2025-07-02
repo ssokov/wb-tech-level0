@@ -22,7 +22,7 @@ func (r *PgOrderRepo) GetById(ctx context.Context, uid string) (*domain.Order, e
 	if err := r.db.GetContext(ctx, &order.Delivery, "SELECT * FROM deliveries WHERE order_uid = $1", uid); err != nil {
 		return nil, err
 	}
-	if err := r.db.GetContext(ctx, &order.Items, "SELECT * FROM items WHERE order_uid = $1", uid); err != nil {
+	if err := r.db.SelectContext(ctx, &order.Items, "SELECT * FROM items WHERE order_uid = $1", uid); err != nil {
 		return nil, err
 	}
 	if err := r.db.GetContext(ctx, &order.Payment, "SELECT * FROM payments WHERE order_uid = $1", uid); err != nil {

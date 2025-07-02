@@ -34,6 +34,7 @@ type Delivery struct {
 }
 
 type Item struct {
+	ID       int    `db:"id"`
 	OrderUid string `db:"order_uid"`
 
 	ChrtID      int64  `json:"chrt_id"      db:"chrt_id"      validate:"required"`

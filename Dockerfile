@@ -16,6 +16,7 @@ FROM alpine:3.18
 RUN apk add --no-cache ca-certificates
 
 COPY --from=builder /app/bin/service /usr/local/bin/service
+COPY --from=builder /app/web/static /usr/local/share/static
 
 EXPOSE 8081
 

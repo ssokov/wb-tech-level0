@@ -24,7 +24,7 @@ func (h *OrderHandler) GetOrder(writer http.ResponseWriter, req *http.Request) {
 
 	order, err := h.orderService.GetOrderByID(id, req.Context())
 	if err != nil {
-		http.Error(writer, "internal error", http.StatusInternalServerError)
+		http.Error(writer, fmt.Sprintf("internal error: %s", err), http.StatusInternalServerError)
 		return
 	}
 	if order == nil {
