@@ -4,24 +4,26 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/kimvlry/simple-order-service/internal/domain"
-	"github.com/kimvlry/simple-order-service/internal/repo"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"time"
+
+	"github.com/kimvlry/simple-order-service/internal/config"
+	"github.com/kimvlry/simple-order-service/internal/domain"
+	"github.com/kimvlry/simple-order-service/internal/interfaces"
+	"github.com/redis/go-redis/v9"
 )
 
 type Client struct {
 	client        *redis.Client
 	cacheDuration time.Duration
-	orderRepo     repo.OrderRepo
+	orderRepo     interfaces.OrderRepository
 }
 
-func NewRedisClient(address string, duration time.Duration, repo repo.OrderRepo) *Client {
+func NewRedisClient(cfg config.RedisConfig, repo interfaces.OrderRepository) interfaces.Cache {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     address,
-		Password: "",
-		DB:       0,
+		Addr:     cfg.Addr,
+		Password: cfg.Password,
+		DB:       cfg.DB,
 	})
 	ctx := context.Background()
 
@@ -32,7 +34,7 @@ func NewRedisClient(address string, duration time.Duration, repo repo.OrderRepo)
 
 	return &Client{
 		client:        rdb,
-		cacheDuration: duration,
+		cacheDuration: cfg.TTL,
 		orderRepo:     repo,
 	}
 }
@@ -73,10 +75,14 @@ func (r *Client) RestoreCache(ctx context.Context) error {
 
 	for _, order := range orders {
 		if err := r.SaveOrder(ctx, &order); err != nil {
-			log.Printf("failed to save order %d to cache", order.OrderUid)
+			log.Printf("failed to save order %s to cache", order.OrderUid)
 			return err
 		}
 	}
 	log.Print("Redis cache restored")
 	return nil
+}
+
+func (r *Client) Close() error {
+	return r.client.Close()
 }

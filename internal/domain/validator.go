@@ -2,8 +2,9 @@ package domain
 
 import (
 	"fmt"
-	"github.com/go-playground/validator/v10"
 	"math"
+
+	"github.com/go-playground/validator/v10"
 )
 
 var validate *validator.Validate

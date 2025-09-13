@@ -3,15 +3,16 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/kimvlry/simple-order-service/internal/service"
 	"net/http"
+
+	"github.com/kimvlry/simple-order-service/internal/interfaces"
 )
 
 type OrderHandler struct {
-	orderService service.OrderService
+	orderService interfaces.OrderService
 }
 
-func NewOrderHandler(orderService service.OrderService) *OrderHandler {
+func NewOrderHandler(orderService interfaces.OrderService) *OrderHandler {
 	return &OrderHandler{orderService}
 }
 

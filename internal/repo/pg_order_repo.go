@@ -2,15 +2,17 @@ package repo
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/kimvlry/simple-order-service/internal/domain"
+	"github.com/kimvlry/simple-order-service/internal/interfaces"
 )
 
 type PgOrderRepo struct {
 	db *sqlx.DB
 }
 
-func NewPgOrderRepo(db *sqlx.DB) *PgOrderRepo {
+func NewPgOrderRepo(db *sqlx.DB) interfaces.OrderRepository {
 	return &PgOrderRepo{db: db}
 }
 
@@ -198,4 +200,8 @@ func (r *PgOrderRepo) replaceItems(ctx context.Context, tx *sqlx.Tx, items []dom
 		}
 	}
 	return nil
+}
+
+func (r *PgOrderRepo) Close() error {
+	return r.db.Close()
 }

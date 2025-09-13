@@ -2,18 +2,18 @@ package service
 
 import (
 	"context"
-	"github.com/kimvlry/simple-order-service/internal/domain"
-	"github.com/kimvlry/simple-order-service/internal/repo"
-	"github.com/kimvlry/simple-order-service/internal/service/redis"
 	"log"
+
+	"github.com/kimvlry/simple-order-service/internal/domain"
+	"github.com/kimvlry/simple-order-service/internal/interfaces"
 )
 
 type OrderService struct {
-	repo        repo.OrderRepo
-	redisClient *redis.Client
+	repo        interfaces.OrderRepository
+	redisClient interfaces.Cache
 }
 
-func NewOrderService(repo repo.OrderRepo, client *redis.Client) *OrderService {
+func NewOrderService(repo interfaces.OrderRepository, client interfaces.Cache) interfaces.OrderService {
 	return &OrderService{
 		repo:        repo,
 		redisClient: client,
